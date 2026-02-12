@@ -35,9 +35,6 @@ Chương trình sẽ in:
 
 ## Đường cong hội tụ
 
-> Bạn chỉ cần thêm file ảnh sau vào repo để hiển thị trên GitHub:
-> `images/convergence_curve.png`
-
 ![Convergence Curve](images/convergence_curve.png)
 
 ## Gợi ý tinh chỉnh nhanh
