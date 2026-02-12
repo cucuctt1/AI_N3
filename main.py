@@ -21,7 +21,7 @@ if __name__ == "__main__":
           T_MAX: {T_MAX}
           """)
     
-    best_solution, best_fitness = bm.benchmark(
+    results = bm.benchmark_both_modes(
         objective_function=sphere,
         n_bats=N_bats,
         dim=dim,
@@ -33,6 +33,11 @@ if __name__ == "__main__":
         verbose=True,
     )
 
-    print(f"Best fitness found: {best_fitness:.6e}")
-    print(f"Best solution (first 5 dims): {best_solution[:5]}")
+    global_solution, global_fitness = results["global"]
+    individual_solution, individual_fitness = results["individual"]
+
+    print(f"[global] Best fitness found: {global_fitness:.6e}")
+    print(f"[global] Best solution (first 5 dims): {global_solution[:5]}")
+    print(f"[individual] Best fitness found: {individual_fitness:.6e}")
+    print(f"[individual] Best solution (first 5 dims): {individual_solution[:5]}")
     
