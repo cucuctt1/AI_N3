@@ -34,9 +34,19 @@ def update_freq_velocity(population, x_best, f_min=0.0, f_max=2.0) -> None:
         bat.frequency = f_min + (f_max - f_min) * beta
         bat.velocity = bat.velocity + (bat.position - x_best) * bat.frequency
 
-def evealuate_fitness(bat,target_function) -> None:
+def evaluate_fitness(bat, target_function) -> None:
     # evaluate fitness
     bat.fitness = target_function(bat.position)
+
+
+def evealuate_fitness(bat, target_function) -> None:
+    evaluate_fitness(bat, target_function)
+
+
+def update_position(population, bounds) -> None:
+    lb, ub = bounds
+    for bat in population:
+        bat.position = np.clip(bat.position + bat.velocity, lb, ub)
 
 def update_behavior(population, iteration, alpha=0.9, gamma=0.9, mode="global"):
     """Cập nhật hành vi dơi (A và r)"""
