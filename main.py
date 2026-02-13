@@ -20,7 +20,7 @@ SEED = 42
 PLOT = True
 VERBOSE = True
 AUTO_GAMMA = False
-USE_IMPROVED_LOCAL_WALK = False
+USE_IMPROVED_LOCAL_WALK = False #deprecated
 
 # ==========================================
 if AUTO_GAMMA:

@@ -1,15 +1,19 @@
 # Bat Algorithm Benchmark (Python)
 
 Benchmark **Bat Algorithm** trên hàm mục tiêu **Sphere Function**.
-Mục tiêu là tối ưu hóa giá trị hàm về gần 0 và theo dõi độ hội tụ theo số vòng lặp.
+Code hiện tại chạy benchmark cho **2 mode hành vi**:
+- `global`
+- `individual`
+
+và vẽ convergence curve trên cùng một biểu đồ.
 
 ## Cấu trúc dự án
 
-- `main.py`: Điểm vào chương trình, cấu hình và chạy benchmark.
-- `src/Bat.py`: Định nghĩa đối tượng dơi và các hàm cập nhật chính.
-- `src/benchmark.py`: Vòng lặp benchmark và thống kê nhiều lần chạy.
-- `src/fitness_fnc.py`: Hàm mục tiêu (hiện tại có `sphere`).
-- `src/matplot_helper.py`: Hàm vẽ đường cong hội tụ.
+- `main.py`: Điểm vào chương trình, cấu hình biến và chạy benchmark.
+- `src/Bat.py`: Định nghĩa Bat object + các hàm cập nhật chuyển động/hành vi/local walk.
+- `src/benchmark.py`: Vòng lặp benchmark và so sánh `global` vs `individual`.
+- `src/fitness_fnc.py`: Hàm mục tiêu (hiện tại dùng `sphere`).
+- `src/matplot_helper.py`: Hàm vẽ convergence curve bằng matplotlib.
 
 ## Yêu cầu môi trường
 
@@ -27,25 +31,47 @@ pip install -r requirement.txt
 python main.py
 ```
 
-Chương trình sẽ in:
-- Kết quả từng run
-- Best/Mean/Std fitness sau khi hoàn tất benchmark
-- Nghiệm tốt nhất tìm được
-- Biểu đồ hội tụ (nếu `plot=True` trong `main.py`)
+## Biến cấu hình chính (trong `main.py`)
 
-## Đường cong hội tụ
+- `T_MAX`: số vòng lặp tối đa.
+- `N_bats`: kích thước quần thể.
+- `dim`: số chiều bài toán.
+- `bounds`: miền tìm kiếm.
+- `N_RUNS`: số lần benchmark.
+
+### Hyperparameters Bat Algorithm
+
+- `F_MIN`, `F_MAX`: dải tần số.
+- `ALPHA`: hệ số giảm loudness.
+- `GAMMA`: hệ số tăng pulse rate.
+
+### Runtime options
+
+- `SEED`: seed cho random để tái lập kết quả.
+- `PLOT`: bật/tắt vẽ biểu đồ.
+- `VERBOSE`: bật/tắt log chi tiết.
+- `AUTO_GAMMA`: tự chỉnh gamma theo `dim`.
+- `USE_IMPROVED_LOCAL_WALK`:
+	- `False`: dùng local walk cơ bản (`local_random_walk_for_benchmark`).
+	- `True`: dùng local walk cải tiến (`improved_local_random_walk_for_benchmark`).
+
+## Kết quả đầu ra
+
+Sau khi chạy, chương trình in:
+- Best fitness và best solution cho mode `global`.
+- Best fitness và best solution cho mode `individual`.
+- Thống kê theo run (Best/Mean/Std) cho từng mode.
+
+Nếu `PLOT=True`, chương trình vẽ convergence curve của cả hai mode trên cùng biểu đồ.
+
+## Hình minh họa convergence
+
+README đang trỏ tới file ảnh sau (bạn có thể thay ảnh của mình):
+
+`images/convergence_curve.png`
 
 ![Convergence Curve](images/convergence_curve.png)
 
-## Gợi ý tinh chỉnh nhanh
-
-Trong `main.py`, bạn có thể chỉnh:
-- `T_MAX`: số vòng lặp
-- `N_bats`: số lượng cá thể
-- `dim`: số chiều bài toán
-- `bounds`: miền tìm kiếm
-- `n_runs`: số lần chạy benchmark
-
 ## Ghi chú
 
-- Nếu chạy trên môi trường không có giao diện (headless), có thể đặt `plot=False` để tránh bị treo khi hiển thị biểu đồ.
+- Nếu chạy trên môi trường không có GUI (headless), đặt `PLOT=False` để tránh block ở `plt.show()`.
