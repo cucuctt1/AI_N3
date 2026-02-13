@@ -3,7 +3,7 @@ from src import benchmark as bm
 from src.fitness_fnc import sphere
 #===========CONFIG================
 
-T_MAX = 500          # stop point
+T_MAX = 1000          # stop point
 N_bats = 30         # population size
 dim = 10             # dimension
 bounds = (-5.0, 5.0) # bounds for each dimension
@@ -20,7 +20,7 @@ SEED = 42
 PLOT = True
 VERBOSE = True
 AUTO_GAMMA = False
-USE_IMPROVED_LOCAL_WALK = False #deprecated
+USE_IMPROVED_LOCAL_WALK = False #require update_freq_velocity change from (bat.position - x_best) to (x_best - bat.position)
 
 # ==========================================
 if AUTO_GAMMA:

@@ -6,10 +6,10 @@ class Bat_obj:
         lb, ub = bounds
         self.position = np.random.uniform(lb, ub, dim)
         self.velocity = np.zeros(dim)
-        self.frequency = np.random.uniform(0.0, 2.0)
-        self.loudness = 1.0
-        self.pulse_rate = 0.1
-        self.r_init = 0.1
+        self.frequency = np.random.uniform(f_min, f_max)
+        self.loudness = A_init
+        self.pulse_rate = r_init
+        self.r_init = r_init
         self.best_position = self.position.copy()
         self.best_fitness = float("inf")
     
@@ -135,17 +135,10 @@ def improved_local_random_walk_for_benchmark(population, x_best, bounds):
     lb, ub = bounds
     avg_loudness = np.mean([bat.loudness for bat in population])
 
-    step_size = max(avg_loudness, 0.01)
-
     for bat in population:
         if np.random.rand() > bat.pulse_rate:
-
-            epsilon = np.random.normal(0, 1, size=len(bat.position))
-
-            # midpoint between bat and global best (prevents PSO behaviour)
-            center = 0.5 * (bat.position + x_best)
-
-            bat.position = np.clip(center + epsilon * step_size, lb, ub)
+            epsilon = np.random.uniform(-1.0, 1.0, size=len(bat.position))
+            bat.position = bat.position + epsilon * avg_loudness
 
 def selection_and_update_for_benchmark(population, objective_function,
                                        best_solution, best_fitness,
