@@ -47,6 +47,9 @@ BENCHMARK_FUNCTIONS = {
     "ackley": ackley,
     "griewank": griewank,
 }
+BENCHMARK_FUNCTIONS = {
+    "sphere": sphere
+} # sphere only for quick test
 def _print_table(rows):
     print("\n" + "=" * 92)
     print(f"{'Objective':<12} {'Algorithm':<16} {'Best':>14} {'Mean':>14} {'Std':>14} {'BestRun':>10}")
