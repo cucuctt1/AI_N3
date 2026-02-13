@@ -69,9 +69,11 @@ def benchmark(objective_function=sphere,
               use_improved_local_walk=False,
               behavior_mode="individual",
               seed=None,
+              progress_callback=None,
               plot=True,
               verbose=True,
-              return_best_history=False):
+              return_best_history=False,
+              return_details=False):
     run_results = []
 
     for run_idx in range(n_runs):
@@ -94,6 +96,8 @@ def benchmark(objective_function=sphere,
 
         if verbose:
             print(f"[{behavior_mode}] Run {run_idx + 1}/{n_runs} - Best Fitness: {best_fitness:.6e}")
+        if progress_callback is not None:
+            progress_callback("bat", behavior_mode, run_idx + 1, n_runs)
 
     best_idx = int(np.argmin([result[1] for result in run_results]))
     best_solution, best_fitness, best_history = run_results[best_idx]
@@ -110,6 +114,19 @@ def benchmark(objective_function=sphere,
 
     if plot:
         default_plot_fitness({behavior_mode: best_history})
+
+    details = {
+        "best_solution": best_solution,
+        "best_fitness": float(best_fitness),
+        "best_run_index": best_idx + 1,
+        "mean_fitness": float(all_fitness.mean()),
+        "std_fitness": float(all_fitness.std(ddof=0)),
+        "run_best_fitnesses": all_fitness.tolist(),
+        "best_history": best_history,
+    }
+
+    if return_details:
+        return details
 
     if return_best_history:
         return best_solution, best_fitness, best_history
@@ -129,14 +146,16 @@ def benchmark_both_modes(objective_function=sphere,
                          gamma=0.9,
                          use_improved_local_walk=False,
                          seed=None,
+                         progress_callback=None,
                          plot=True,
-                         verbose=True):
+                         verbose=True,
+                         return_details=False):
     mode_results = {}
     mode_histories = {}
 
     for mode in ["global", "individual"]:
         mode_seed = seed if seed is None else seed + (0 if mode == "global" else 10000)
-        best_solution, best_fitness, best_history = benchmark(
+        mode_detail = benchmark(
             objective_function=objective_function,
             n_bats=n_bats,
             dim=dim,
@@ -150,21 +169,28 @@ def benchmark_both_modes(objective_function=sphere,
             use_improved_local_walk=use_improved_local_walk,
             behavior_mode=mode,
             seed=mode_seed,
+            progress_callback=progress_callback,
             plot=False,
             verbose=verbose,
-            return_best_history=True,
+            return_details=True,
         )
-        mode_results[mode] = (best_solution, best_fitness)
-        mode_histories[mode] = best_history
+        mode_results[mode] = mode_detail
+        mode_histories[mode] = mode_detail["best_history"]
 
     if verbose:
         print("=" * 60)
         print("Mode comparison summary")
-        print(f"Global best fitness    : {mode_results['global'][1]:.6e}")
-        print(f"Individual best fitness: {mode_results['individual'][1]:.6e}")
+        print(f"Global best fitness    : {mode_results['global']['best_fitness']:.6e}")
+        print(f"Individual best fitness: {mode_results['individual']['best_fitness']:.6e}")
         print("=" * 60)
 
     if plot:
         default_plot_fitness(mode_histories)
 
-    return mode_results
+    if return_details:
+        return mode_results
+
+    return {
+        "global": (mode_results["global"]["best_solution"], mode_results["global"]["best_fitness"]),
+        "individual": (mode_results["individual"]["best_solution"], mode_results["individual"]["best_fitness"]),
+    }
