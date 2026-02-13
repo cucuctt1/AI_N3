@@ -65,8 +65,109 @@ def update_behavior(population, iteration, alpha=0.9, gamma=0.9, mode="global"):
     elif mode == "individual":
         # individual mode: update A and r for each bat
         for bat in population:
-            bat.loudness *= alpha
+            # bat.loudness *= alpha ////remove duplicate update in selection_and_update 
             bat.pulse_rate = bat.r_init * (1 - np.exp(-gamma * iteration))
+
+def update_position_reflect(population, bounds):
+    """Cập nhật vị trí nâng cao: Cơ chế bật tường (Reflect) - Vector hóa."""
+    lb, ub = bounds
+    for bat in population:
+        new_pos = bat.position + bat.velocity
+       
+        # Xử lý vượt cận trên (Upper bound)
+        over_ub = new_pos > ub
+        new_pos[over_ub] = 2 * ub - new_pos[over_ub]
+        bat.velocity[over_ub] *= -1  # Đảo chiều vận tốc
+
+        # Xử lý vượt cận dưới (Lower bound)
+        under_lb = new_pos < lb
+        new_pos[under_lb] = 2 * lb - new_pos[under_lb]
+        bat.velocity[under_lb] *= -1 # Đảo chiều vận tốc
+
+        # Đảm bảo an toàn tuyệt đối
+        bat.position = np.clip(new_pos, lb, ub)
+
+def local_random_walk(population, x_best, bounds):
+    lb, ub = bounds
+    # Loudness trung bình
+    A_avg = np.mean([bat.loudness for bat in population])
+    for bat in population:
+        # Điều kiện local search
+        if np.random.rand() > bat.pulse_rate:
+            epsilon = np.random.uniform(-1, 1, size=len(bat.position))
+            new_position = x_best + epsilon * A_avg
+            # Giữ trong bounds
+            bat.position = np.clip(new_position, lb, ub)
+
+def selection_and_update(population, objective_function,
+                         best_solution, best_fitness,
+                         iteration,
+                         alpha=0.9, gamma=0.9):
+   
+    for bat in population:
+        # Fitness của nghiệm hiện tại
+        fitness_new = objective_function(bat.position)
+        # ------------------------------
+        # ACCEPTANCE RULE
+        # ------------------------------
+        if (fitness_new <= bat.best_fitness) and (np.random.rand() < bat.loudness):
+            # Chấp nhận nghiệm mới
+            bat.best_position = bat.position.copy()
+            bat.best_fitness = fitness_new
+            # ------------------------------
+            # UPDATE LOUDNESS
+            # A(t+1) = alpha * A(t)
+            # ------------------------------
+            # old version: bat.loudness *= alpha
+            bat.loudness = max(bat.loudness * alpha, 0.01) # clamp value to avoid zero
+
+
+def local_random_walk_for_benchmark(population, x_best, bounds):
+    lb, ub = bounds
+    avg_loudness = np.mean([bat.loudness for bat in population])
+
+    for bat in population:
+        if np.random.rand() > bat.pulse_rate:
+            epsilon = np.random.uniform(-1.0, 1.0, size=len(bat.position))
+            bat.position = np.clip(x_best + epsilon * avg_loudness, lb, ub)
+
+def improved_local_random_walk_for_benchmark(population, x_best, bounds):
+    lb, ub = bounds
+    avg_loudness = np.mean([bat.loudness for bat in population])
+
+    step_size = max(avg_loudness, 0.01)
+
+    for bat in population:
+        if np.random.rand() > bat.pulse_rate:
+
+            epsilon = np.random.normal(0, 1, size=len(bat.position))
+
+            # midpoint between bat and global best (prevents PSO behaviour)
+            center = 0.5 * (bat.position + x_best)
+
+            bat.position = np.clip(center + epsilon * step_size, lb, ub)
+
+def selection_and_update_for_benchmark(population, objective_function,
+                                       best_solution, best_fitness,
+                                       iteration,
+                                       alpha=0.95, gamma=0.9,
+                                       behavior_mode="individual"):
+    for bat in population:
+        fitness_new = objective_function(bat.position)
+
+        if (fitness_new <= bat.best_fitness) and (np.random.rand() < bat.loudness):
+            bat.best_position = bat.position.copy()
+            bat.best_fitness = fitness_new
+
+        bat.fitness = fitness_new
+
+        if bat.best_fitness < best_fitness:
+            best_fitness = bat.best_fitness
+            best_solution = bat.best_position.copy()
+
+    update_behavior(population, iteration=iteration, alpha=alpha, gamma=gamma, mode=behavior_mode)
+    return best_solution, best_fitness
+
 
 
     

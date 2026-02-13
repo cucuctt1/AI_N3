@@ -2,8 +2,10 @@ import numpy as np
 
 from src.Bat import (
     evaluate_fitness,
+    improved_local_random_walk_for_benchmark,
     initialize_population,
-    update_behavior,
+    local_random_walk_for_benchmark,
+    selection_and_update_for_benchmark,
     update_freq_velocity,
     update_position,
 )
@@ -20,7 +22,8 @@ def _evaluate_population(population, objective_function):
 
 
 def _run_single(objective_function, n_bats, dim, bounds, iterations,
-                f_min, f_max, alpha, gamma, seed, behavior_mode):
+                f_min, f_max, alpha, gamma, seed, behavior_mode,
+                use_improved_local_walk=False):
     if seed is not None:
         np.random.seed(seed)
 
@@ -31,30 +34,23 @@ def _run_single(objective_function, n_bats, dim, bounds, iterations,
     best_solution = best_bat.best_position.copy()
     best_fitness = best_bat.best_fitness
     fitness_history = [best_fitness]
-
-    lb, ub = bounds
+    local_walk_fn = improved_local_random_walk_for_benchmark if use_improved_local_walk else local_random_walk_for_benchmark
 
     for iteration in range(1, iterations + 1):
         update_freq_velocity(population, best_solution, f_min=f_min, f_max=f_max)
         update_position(population, bounds)
 
-        avg_loudness = float(np.mean([bat.loudness for bat in population]))
-        for bat in population:
-            if np.random.rand() > bat.pulse_rate:
-                epsilon = np.random.uniform(-1.0, 1.0, dim)
-                bat.position = np.clip(best_solution + epsilon * avg_loudness, lb, ub)
-
-            new_fitness = objective_function(bat.position)
-            if (new_fitness <= bat.best_fitness) and (np.random.rand() < bat.loudness):
-                bat.best_fitness = new_fitness
-                bat.best_position = bat.position.copy()
-            bat.fitness = new_fitness
-
-            if bat.best_fitness < best_fitness:
-                best_fitness = bat.best_fitness
-                best_solution = bat.best_position.copy()
-
-        update_behavior(population, iteration=iteration, alpha=alpha, gamma=gamma, mode=behavior_mode)
+        local_walk_fn(population, best_solution, bounds)
+        best_solution, best_fitness = selection_and_update_for_benchmark(
+            population,
+            objective_function,
+            best_solution,
+            best_fitness,
+            iteration,
+            alpha=alpha,
+            gamma=gamma,
+            behavior_mode=behavior_mode,
+        )
         fitness_history.append(best_fitness)
 
     return best_solution, best_fitness, fitness_history
@@ -70,6 +66,7 @@ def benchmark(objective_function=sphere,
               f_max=2.0,
               alpha=0.9,
               gamma=0.9,
+              use_improved_local_walk=False,
               behavior_mode="individual",
               seed=None,
               plot=True,
@@ -91,6 +88,7 @@ def benchmark(objective_function=sphere,
             gamma=gamma,
             seed=run_seed,
             behavior_mode=behavior_mode,
+            use_improved_local_walk=use_improved_local_walk,
         )
         run_results.append((best_solution, best_fitness, fitness_history))
 
@@ -129,6 +127,7 @@ def benchmark_both_modes(objective_function=sphere,
                          f_max=2.0,
                          alpha=0.9,
                          gamma=0.9,
+                         use_improved_local_walk=False,
                          seed=None,
                          plot=True,
                          verbose=True):
@@ -148,6 +147,7 @@ def benchmark_both_modes(objective_function=sphere,
             f_max=f_max,
             alpha=alpha,
             gamma=gamma,
+            use_improved_local_walk=use_improved_local_walk,
             behavior_mode=mode,
             seed=mode_seed,
             plot=False,
